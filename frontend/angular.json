@@ -63,7 +63,12 @@
               "buildTarget": "frontend:build:development"
             }
           },
-          "defaultConfiguration": "development"
+          "defaultConfiguration": "development",
+          "options": {
+            "allowedHosts": [
+              "ultron.hack2skill.com"
+            ]
+          }
         },
         "test": {
           "builder": "@angular/build:unit-test"

@@ -1,0 +1,145 @@
+<section class="hero">
+  <div>
+    <p class="eyebrow">Team directory</p>
+    <h2>Manage your employees in one place</h2>
+    <p class="lead">Add new employees, keep their details up to date, and remove the ones who have left.</p>
+  </div>
+  <div class="hero-side">
+    <div class="stat">
+      <span class="stat-value">{{ employees().length }}</span>
+      <span class="stat-label">{{ employees().length === 1 ? 'Employee' : 'Employees' }}</span>
+    </div>
+    <button type="button" class="btn btn-primary" (click)="openCreate()">+ Add employee</button>
+  </div>
+</section>
+
+<section class="card">
+  <div class="toolbar">
+    <h3>Employees</h3>
+    <input
+      type="search"
+      class="search"
+      placeholder="Search by name, ID, email or designation"
+      aria-label="Search employees"
+      [value]="search()"
+      (input)="search.set($any($event.target).value)"
+    />
+  </div>
+
+  @if (loading()) {
+    <p class="state">Loading employees…</p>
+  } @else if (loadError()) {
+    <div class="state">
+      <p class="error">{{ loadError() }}</p>
+      <button type="button" class="btn" (click)="load()">Try again</button>
+    </div>
+  } @else if (employees().length === 0) {
+    <div class="state">
+      <p>No employees yet.</p>
+      <button type="button" class="btn btn-primary" (click)="openCreate()">Add your first employee</button>
+    </div>
+  } @else if (filtered().length === 0) {
+    <p class="state">No employees match “{{ search() }}”.</p>
+  } @else {
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Employee ID</th>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Designation</th>
+            <th class="actions-col">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (employee of filtered(); track employee.id) {
+            <tr>
+              <td><span class="badge">{{ employee.employeeId }}</span></td>
+              <td class="name">{{ employee.name }}</td>
+              <td>{{ employee.email }}</td>
+              <td>{{ employee.designation }}</td>
+              <td class="actions-col">
+                <button type="button" class="btn btn-small" (click)="openEdit(employee)">Edit</button>
+                <button type="button" class="btn btn-small btn-danger-text" (click)="askDelete(employee)">Delete</button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</section>
+
+@if (formOpen()) {
+  <div class="overlay" (click)="closeForm()">
+    <form class="dialog" role="dialog" aria-modal="true" [formGroup]="form" (ngSubmit)="save()" (click)="$event.stopPropagation()">
+      <h3>{{ editing() ? 'Edit employee' : 'Add employee' }}</h3>
+
+      <label>
+        Employee ID
+        <input type="text" formControlName="employeeId" placeholder="EMP001" maxlength="30" [class.invalid]="invalid('employeeId')" />
+        @if (invalid('employeeId')) {
+          <span class="field-error">Employee ID is required.</span>
+        }
+      </label>
+
+      <label>
+        Employee name
+        <input type="text" formControlName="name" placeholder="Full name" maxlength="100" [class.invalid]="invalid('name')" />
+        @if (invalid('name')) {
+          <span class="field-error">Name is required.</span>
+        }
+      </label>
+
+      <label>
+        Employee email
+        <input type="email" formControlName="email" placeholder="name@company.com" maxlength="150" [class.invalid]="invalid('email')" />
+        @if (invalid('email')) {
+          <span class="field-error">Enter a valid email address.</span>
+        }
+      </label>
+
+      <label>
+        Designation
+        <input type="text" formControlName="designation" placeholder="Software Engineer" maxlength="100" [class.invalid]="invalid('designation')" />
+        @if (invalid('designation')) {
+          <span class="field-error">Designation is required.</span>
+        }
+      </label>
+
+      @if (formError()) {
+        <p class="error" role="alert">{{ formError() }}</p>
+      }
+
+      <div class="dialog-actions">
+        <button type="button" class="btn" [disabled]="saving()" (click)="closeForm()">Cancel</button>
+        <button type="submit" class="btn btn-primary" [disabled]="saving()">
+          {{ saving() ? 'Saving…' : editing() ? 'Save changes' : 'Add employee' }}
+        </button>
+      </div>
+    </form>
+  </div>
+}
+
+@if (deleting(); as target) {
+  <div class="overlay" (click)="cancelDelete()">
+    <div class="dialog" role="alertdialog" aria-modal="true" (click)="$event.stopPropagation()">
+      <h3>Delete employee?</h3>
+      <p>{{ target.name }} ({{ target.employeeId }}) will be permanently removed.</p>
+      @if (deleteError()) {
+        <p class="error" role="alert">{{ deleteError() }}</p>
+      }
+      <div class="dialog-actions">
+        <button type="button" class="btn" [disabled]="deleteBusy()" (click)="cancelDelete()">Cancel</button>
+        <button type="button" class="btn btn-danger" [disabled]="deleteBusy()" (click)="confirmDelete()">
+          {{ deleteBusy() ? 'Deleting…' : 'Delete' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+@if (toast()) {
+  <div class="toast" role="status">{{ toast() }}</div>
+}
